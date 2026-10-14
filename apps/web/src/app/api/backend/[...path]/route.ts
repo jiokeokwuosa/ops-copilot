@@ -3,6 +3,9 @@ import { apiOrigin, readSessionCookie } from "@/lib/server/session";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 async function forward(req: NextRequest, context: RouteContext) {
   const { path } = await context.params;
   if (path.some((segment) => segment === ".." || segment.includes("/"))) {
@@ -33,14 +36,28 @@ async function forward(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ detail: "API unavailable" }, { status: 502 });
   }
 
-  const response = new NextResponse(await upstream.text(), {
+  const upstreamType = upstream.headers.get("content-type") ?? "application/json";
+  const responseHeaders: Record<string, string> = {
+    "content-type": upstreamType,
+    "cache-control": "no-store",
+  };
+
+  // Pass through SSE streams without buffering the whole body.
+  if (upstreamType.includes("text/event-stream") && upstream.body) {
+    return new NextResponse(upstream.body, {
+      status: upstream.status,
+      headers: {
+        ...responseHeaders,
+        connection: "keep-alive",
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
+  return new NextResponse(await upstream.text(), {
     status: upstream.status,
-    headers: {
-      "content-type": upstream.headers.get("content-type") ?? "application/json",
-      "cache-control": "no-store",
-    },
+    headers: responseHeaders,
   });
-  return response;
 }
 
 export const GET = forward;

@@ -1,4 +1,4 @@
-"""Integration: write interrupt approve / reject."""
+"""Integration: write interrupt approve / reject (SSE chat + JSON approve)."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.db.models.stubs import TicketStub
 from app.db.session import SessionLocal
 from app.main import app
+from tests.helpers_sse import sse_events
 
 
 async def _reset_ticket(external_id: str, status: str = "open") -> None:
@@ -32,6 +33,14 @@ async def _login_and_thread(client: AsyncClient) -> tuple[dict[str, str], str]:
     return headers, thread.json()["id"]
 
 
+def _approval_from_sse(response) -> dict:
+    events = sse_events(response)
+    for name, data in events:
+        if name == "approval_required":
+            return data
+    raise AssertionError("approval_required event missing")
+
+
 @pytest.mark.asyncio
 async def test_write_approve_applies_once() -> None:
     await _reset_ticket("TKT-1001", "open")
@@ -44,21 +53,17 @@ async def test_write_approve_applies_once() -> None:
             json={"message": "Update ticket TKT-1001 status to resolved"},
         )
         assert chat.status_code == 200
-        body = chat.json()
-        assert body.get("pending_approval") is not None
-        approval = body["pending_approval"]
-        assert approval["status"] == "pending"
+        approval = _approval_from_sse(chat)
         assert approval["tool_name"] == "ticket_update"
 
         async with SessionLocal() as db:
             before = await db.execute(
                 select(TicketStub).where(TicketStub.external_id == "TKT-1001")
             )
-            ticket = before.scalar_one()
-            assert ticket.status != "resolved"
+            assert before.scalar_one().status != "resolved"
 
         decide = await client.post(
-            f"/v1/threads/{tid}/approvals/{approval['id']}",
+            f"/v1/threads/{tid}/approvals/{approval['approval_id']}",
             headers=headers,
             json={"decision": "approve"},
         )
@@ -71,8 +76,7 @@ async def test_write_approve_applies_once() -> None:
             after = await db.execute(
                 select(TicketStub).where(TicketStub.external_id == "TKT-1001")
             )
-            ticket = after.scalar_one()
-            assert ticket.status == "resolved"
+            assert after.scalar_one().status == "resolved"
 
 
 @pytest.mark.asyncio
@@ -87,8 +91,7 @@ async def test_write_reject_applies_nothing() -> None:
             json={"message": "Update ticket TKT-1002 status to closed"},
         )
         assert chat.status_code == 200
-        approval = chat.json()["pending_approval"]
-        assert approval is not None
+        approval = _approval_from_sse(chat)
 
         async with SessionLocal() as db:
             before = await db.execute(
@@ -97,7 +100,7 @@ async def test_write_reject_applies_nothing() -> None:
             status_before = before.scalar_one().status
 
         decide = await client.post(
-            f"/v1/threads/{tid}/approvals/{approval['id']}",
+            f"/v1/threads/{tid}/approvals/{approval['approval_id']}",
             headers=headers,
             json={"decision": "reject"},
         )

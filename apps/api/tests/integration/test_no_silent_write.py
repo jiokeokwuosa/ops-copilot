@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.db.models.stubs import TicketStub
 from app.db.session import SessionLocal
 from app.main import app
+from tests.helpers_sse import sse_events
 
 
 @pytest.mark.asyncio
@@ -46,9 +47,9 @@ async def test_write_does_not_apply_without_approve() -> None:
             json={"message": "Update ticket TKT-1003 status to resolved"},
         )
         assert chat.status_code == 200
-        body = chat.json()
-        assert body.get("pending_approval") is not None
-        assert body["pending_approval"]["status"] == "pending"
+        events = sse_events(chat)
+        approval = next(data for name, data in events if name == "approval_required")
+        assert approval["approval_id"]
 
         async with SessionLocal() as db:
             after = await db.execute(
@@ -59,4 +60,4 @@ async def test_write_does_not_apply_without_approve() -> None:
         detail = await client.get(f"/v1/threads/{tid}", headers=headers)
         assert detail.status_code == 200
         assert detail.json()["status"] == "pending_approval"
-        assert detail.json()["pending_approval"]["id"] == body["pending_approval"]["id"]
+        assert detail.json()["pending_approval"]["id"] == approval["approval_id"]

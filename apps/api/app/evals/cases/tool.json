@@ -1,0 +1,11 @@
+[
+  {
+    "id": "tool-ticket-read",
+    "category": "tool",
+    "input": "What is the status of ticket TKT-1001?",
+    "expected": {
+      "refused": false,
+      "content_contains_any": ["TKT-1001", "Status"]
+    }
+  }
+]
