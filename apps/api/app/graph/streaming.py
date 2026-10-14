@@ -14,6 +14,8 @@ from app.auth.deps import AuthContext
 from app.db.models import Message, PendingApproval, Thread
 from app.graph.build import build_graph
 from app.graph.checkpointer import ensure_checkpointer
+from app.graph.config import thread_config
+from app.graph.state import GraphState
 from app.tools.intent import detect_intent
 
 NODE_META: dict[str, tuple[str, str]] = {
@@ -90,8 +92,8 @@ async def stream_chat(
 
     await ensure_checkpointer()
     graph = build_graph(db, auth.tenant_id, thread.id)
-    config = {"configurable": {"thread_id": str(thread.id)}}
-    inputs = {
+    config = thread_config(str(thread.id))
+    inputs: GraphState = {
         "question": message,
         "tenant_id": str(auth.tenant_id),
         "thread_id": str(thread.id),

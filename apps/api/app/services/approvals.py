@@ -10,6 +10,7 @@ from app.auth.deps import AuthContext
 from app.db.models import Message, PendingApproval, Thread
 from app.graph.build import build_graph
 from app.graph.checkpointer import ensure_checkpointer
+from app.graph.config import thread_config
 from app.schemas import ApprovalResult
 from app.services.threads import ThreadNotFound
 from app.tools import crm as crm_tools
@@ -76,7 +77,7 @@ async def resolve_approval(
 
     await ensure_checkpointer()
     graph = build_graph(db, auth.tenant_id, thread.id)
-    config = {"configurable": {"thread_id": str(thread.id)}}
+    config = thread_config(str(thread.id))
 
     content = ""
     applied = False

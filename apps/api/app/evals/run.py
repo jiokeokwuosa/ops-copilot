@@ -14,6 +14,8 @@ from app.db.models import Thread
 from app.db.seed import TENANT_A_ID, USER_A_ID
 from app.graph.build import build_graph
 from app.graph.checkpointer import ensure_checkpointer
+from app.graph.config import thread_config
+from app.graph.state import GraphState
 from app.tools.intent import detect_intent
 
 CASES_DIR = Path(__file__).parent / "cases"
@@ -62,17 +64,15 @@ async def run_eval_suite(db: AsyncSession, suite: str = "golden") -> dict[str, A
         await db.flush()
 
         graph = build_graph(db, auth.tenant_id, thread.id)
-        config = {"configurable": {"thread_id": str(thread.id)}}
-        final = await graph.ainvoke(
-            {
-                "question": case["input"],
-                "tenant_id": str(auth.tenant_id),
-                "thread_id": str(thread.id),
-                "intent": detect_intent(case["input"]),
-                "messages": [],
-            },
-            config=config,
-        )
+        config = thread_config(str(thread.id))
+        inputs: GraphState = {
+            "question": case["input"],
+            "tenant_id": str(auth.tenant_id),
+            "thread_id": str(thread.id),
+            "intent": detect_intent(case["input"]),
+            "messages": [],
+        }
+        final = await graph.ainvoke(inputs, config=config)
         outcome = {
             "content": final.get("answer") or "",
             "refused": bool(final.get("refused")),
