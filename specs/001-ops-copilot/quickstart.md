@@ -82,8 +82,13 @@ Seeded demo users (exact values in seed script): one user in **Tenant A**, one i
 
 ### V7 — Evals + trace
 
-1. `cd apps/api && pytest -m eval` (or `POST /v1/evals/run`).
-2. Open LangSmith (if configured) for a run.
+1. Run the golden suite from the API container/host:
+   - `cd apps/api && ENVIRONMENT=test CHECKPOINT_BACKEND=memory pytest -m eval`
+   - or authenticated `POST /v1/evals/run` with body `{"suite":"golden"}`
+2. Cases live under `apps/api/app/evals/cases/` (grounding, refusal, tool).
+3. Optional traces: set `LANGCHAIN_TRACING_V2=true`, `LANGCHAIN_API_KEY`, and
+   `LANGCHAIN_PROJECT` in `.env`, restart API, run a chat turn, then open the
+   LangSmith project UI to inspect retrieve → grade → tool → approval → outcome.
 
 **Expect**: Report with grounding/refusal/tool cases; trace shows steps (SC-009/SC-010).
 

@@ -130,19 +130,19 @@
 
 ### Tests for User Story 4
 
-- [ ] T048 [P] [US4] Contract tests for SSE event shapes per `contracts/sse-events.md` in `apps/api/tests/contract/test_sse_events.py`
-- [ ] T049 [P] [US4] Vitest for ChatTimeline/StepNode/SourceChips rendering in `apps/web/tests/ChatTimeline.test.tsx`
-- [ ] T050 [P] [US4] Integration test that multi-phase chat emits searching→reading→writing before completion in `apps/api/tests/integration/test_timeline_stream.py`
+- [x] T048 [P] [US4] Contract tests for SSE event shapes per `contracts/sse-events.md` in `apps/api/tests/contract/test_sse_events.py`
+- [x] T049 [P] [US4] Vitest for ChatTimeline/StepNode/SourceChips rendering in `apps/web/tests/ChatTimeline.test.tsx`
+- [x] T050 [P] [US4] Integration test that multi-phase chat emits searching→reading→writing before completion in `apps/api/tests/integration/test_timeline_stream.py`
 
 ### Implementation for User Story 4
 
-- [ ] T051 [US4] Map LangGraph `updates`/`messages`/`custom` streams to SSE events in `apps/api/app/graph/streaming.py`
-- [ ] T052 [US4] Convert `POST /v1/threads/{thread_id}/chat` to `text/event-stream` in `apps/api/app/routes/chat.py`
-- [ ] T053 [US4] Persist completed ProgressStep array on assistant Message (FR-022) in `apps/api/app/db/models/message.py` helpers
-- [ ] T054 [P] [US4] Implement `ChatTimeline`, `StepNode`, `SourceChips` in `apps/web/src/components/ChatTimeline.tsx`, `StepNode.tsx`, `SourceChips.tsx`
-- [ ] T055 [US4] Implement `useChatStream` SSE consumer in `apps/web/src/hooks/useChatStream.ts`
-- [ ] T056 [US4] Wire timeline + streaming bubble into chat page `apps/web/src/app/chat/[threadId]/page.tsx`
-- [ ] T057 [US4] Ensure T048–T050 pass; verify first step appears under normal load (SC-006)
+- [x] T051 [US4] Map LangGraph `updates`/`messages`/`custom` streams to SSE events in `apps/api/app/graph/streaming.py`
+- [x] T052 [US4] Convert `POST /v1/threads/{thread_id}/chat` to `text/event-stream` in `apps/api/app/routes/chat.py`
+- [x] T053 [US4] Persist completed ProgressStep array on assistant Message (FR-022) in `apps/api/app/db/models/message.py` helpers
+- [x] T054 [P] [US4] Implement `ChatTimeline`, `StepNode`, `SourceChips` in `apps/web/src/components/ChatTimeline.tsx`, `StepNode.tsx`, `SourceChips.tsx`
+- [x] T055 [US4] Implement `useChatStream` SSE consumer in `apps/web/src/hooks/useChatStream.ts`
+- [x] T056 [US4] Wire timeline + streaming bubble into chat page `apps/web/src/app/chat/[threadId]/page.tsx`
+- [x] T057 [US4] Ensure T048–T050 pass; verify first step appears under normal load (SC-006)
 
 **Checkpoint**: US4 — live timeline UX independently demonstrable
 
@@ -156,15 +156,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T058 [P] [US3] Integration test resume after process restart with Postgres checkpointer in `apps/api/tests/integration/test_durable_resume.py`
-- [ ] T059 [P] [US3] Integration test pending approval survives restart in `apps/api/tests/integration/test_approval_resume.py`
+- [x] T058 [P] [US3] Integration test resume after process restart with Postgres checkpointer in `apps/api/tests/integration/test_durable_resume.py`
+- [x] T059 [P] [US3] Integration test pending approval survives restart in `apps/api/tests/integration/test_approval_resume.py`
 
 ### Implementation for User Story 3
 
-- [ ] T060 [US3] Configure LangGraph AsyncPostgresSaver in `apps/api/app/graph/checkpointer.py` and use in `apps/api/app/graph/build.py`
-- [ ] T061 [US3] Ensure chat/approve pass `thread_id` config consistently in `apps/api/app/routes/chat.py` and `apps/api/app/routes/approvals.py`
-- [ ] T062 [US3] Reload messages + pending_approval on `GET /v1/threads/{id}` and hydrate UI in `apps/web/src/hooks/useThread.ts`
-- [ ] T063 [US3] Ensure T058–T059 pass (SC-004)
+- [x] T060 [US3] Configure LangGraph AsyncPostgresSaver in `apps/api/app/graph/checkpointer.py` and use in `apps/api/app/graph/build.py`
+- [x] T061 [US3] Ensure chat/approve pass `thread_id` config consistently in `apps/api/app/routes/chat.py` and `apps/api/app/routes/approvals.py`
+- [x] T062 [US3] Reload messages + pending_approval on `GET /v1/threads/{id}` and hydrate UI in `apps/web/src/hooks/useThread.ts`
+- [x] T063 [US3] Ensure T058–T059 pass (SC-004)
 
 **Checkpoint**: US3 — durable memory independently verified
 
@@ -178,16 +178,16 @@
 
 ### Tests for User Story 5
 
-- [ ] T064 [P] [US5] Integration test unauthenticated chat/threads return 401 in `apps/api/tests/integration/test_auth_required.py`
-- [ ] T065 [P] [US5] Integration test cross-tenant thread access denied in `apps/api/tests/integration/test_tenant_isolation.py`
-- [ ] T066 [P] [US5] Vitest/guard test that web redirects unauthenticated users in `apps/web/tests/auth-guard.test.tsx`
+- [x] T064 [P] [US5] Integration test unauthenticated chat/threads return 401 in `apps/api/tests/integration/test_auth_required.py`
+- [x] T065 [P] [US5] Integration test cross-tenant thread access denied in `apps/api/tests/integration/test_tenant_isolation.py`
+- [x] T066 [P] [US5] Vitest/guard test that web redirects unauthenticated users in `apps/web/tests/auth-guard.test.tsx`
 
 ### Implementation for User Story 5
 
-- [ ] T067 [US5] Audit all API routes for auth dependency + tenant filters in `apps/api/app/routes/` and `apps/api/app/auth/deps.py`
-- [ ] T068 [US5] Ensure RAG retrieval and stub tools filter by `tenant_id` in `apps/api/app/rag/retrieve.py` and `apps/api/app/tools/`
-- [ ] T069 [US5] Add web auth guard/middleware for chat routes in `apps/web/src/middleware.ts` (or layout guard)
-- [ ] T070 [US5] Ensure T064–T066 pass (SC-005)
+- [x] T067 [US5] Audit all API routes for auth dependency + tenant filters in `apps/api/app/routes/` and `apps/api/app/auth/deps.py`
+- [x] T068 [US5] Ensure RAG retrieval and stub tools filter by `tenant_id` in `apps/api/app/rag/retrieve.py` and `apps/api/app/tools/`
+- [x] T069 [US5] Add web auth guard/middleware for chat routes in `apps/web/src/middleware.ts` (or layout guard)
+- [x] T070 [US5] Ensure T064–T066 pass (SC-005)
 
 **Checkpoint**: US5 — auth + tenancy independently verified
 
@@ -201,17 +201,17 @@
 
 ### Tests for User Story 6
 
-- [ ] T071 [P] [US6] Eval runner smoke test in `apps/api/tests/integration/test_eval_runner.py`
-- [ ] T072 [P] [US6] Contract test for `POST /v1/evals/run` in `apps/api/tests/contract/test_evals_api.py`
+- [x] T071 [P] [US6] Eval runner smoke test in `apps/api/tests/integration/test_eval_runner.py`
+- [x] T072 [P] [US6] Contract test for `POST /v1/evals/run` in `apps/api/tests/contract/test_evals_api.py`
 
 ### Implementation for User Story 6
 
-- [ ] T073 [P] [US6] Add golden cases JSON under `apps/api/app/evals/cases/` (grounding, refusal, tool)
-- [ ] T074 [US6] Implement eval runner in `apps/api/app/evals/run.py`
-- [ ] T075 [US6] Implement `POST /v1/evals/run` in `apps/api/app/routes/evals.py`
-- [ ] T076 [US6] Configure LangSmith tracing in `apps/api/app/core/langsmith.py` and enable on graph invokes
-- [ ] T077 [US6] Document how to view traces and run evals in `specs/001-ops-copilot/quickstart.md` (V7 section verify)
-- [ ] T078 [US6] Ensure T071–T072 pass (SC-009/SC-010)
+- [x] T073 [P] [US6] Add golden cases JSON under `apps/api/app/evals/cases/` (grounding, refusal, tool)
+- [x] T074 [US6] Implement eval runner in `apps/api/app/evals/run.py`
+- [x] T075 [US6] Implement `POST /v1/evals/run` in `apps/api/app/routes/evals.py`
+- [x] T076 [US6] Configure LangSmith tracing in `apps/api/app/core/langsmith.py` and enable on graph invokes
+- [x] T077 [US6] Document how to view traces and run evals in `specs/001-ops-copilot/quickstart.md` (V7 section verify)
+- [x] T078 [US6] Ensure T071–T072 pass (SC-009/SC-010)
 
 **Checkpoint**: US6 — evals + tracing independently usable
 
@@ -221,11 +221,11 @@
 
 **Purpose**: Quality gates and full quickstart validation
 
-- [ ] T079 [P] Add CI workflow lint/type/test for api + web in `.github/workflows/ci.yml` (or equivalent)
-- [ ] T080 [P] Harden error SSE/`error` events and failed step UI in `apps/api/app/graph/streaming.py` and `apps/web/src/components/StepNode.tsx`
-- [ ] T081 Verify thread status transitions `active` ↔ `pending_approval` across chat/approve paths
-- [ ] T082 Run full `specs/001-ops-copilot/quickstart.md` scenarios V1–V7 and fix gaps
-- [ ] T083 [P] Code cleanup: remove dead stubs, ensure no secrets committed, align OpenAPI with `contracts/openapi.yaml`
+- [x] T079 [P] Add CI workflow lint/type/test for api + web in `.github/workflows/ci.yml` (or equivalent)
+- [x] T080 [P] Harden error SSE/`error` events and failed step UI in `apps/api/app/graph/streaming.py` and `apps/web/src/components/StepNode.tsx`
+- [x] T081 Verify thread status transitions `active` ↔ `pending_approval` across chat/approve paths
+- [x] T082 Run full `specs/001-ops-copilot/quickstart.md` scenarios V1–V7 and fix gaps
+- [x] T083 [P] Code cleanup: remove dead stubs, ensure no secrets committed, align OpenAPI with `contracts/openapi.yaml`
 
 ---
 

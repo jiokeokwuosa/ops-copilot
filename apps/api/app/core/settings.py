@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _env_file() -> Path | None:
-    """Repo-root `.env` when developing locally. Docker injects the same values as environment variables."""
+    """Repo-root `.env` locally; Docker injects the same values as env vars."""
     for parent in Path(__file__).resolve().parents:
         candidate = parent / ".env"
         if candidate.is_file() or (parent / ".env.example").is_file():
@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     langchain_project: str = "ops-copilot"
     api_cors_origins: str = "http://localhost:3000"
     environment: str = "development"
+    # memory | postgres | empty (auto: postgres unless environment=test)
+    checkpoint_backend: str = ""
 
     @property
     def cors_origins(self) -> list[str]:

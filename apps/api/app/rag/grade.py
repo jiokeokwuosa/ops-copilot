@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 OFF_TOPIC_HINTS = (
     "weather",
     "recipe",

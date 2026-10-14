@@ -1,0 +1,11 @@
+[
+  {
+    "id": "ground-mfa",
+    "category": "grounding",
+    "input": "How do I reset MFA for a user?",
+    "expected": {
+      "refused": false,
+      "content_contains_any": ["MFA", "multi-factor", "factor"]
+    }
+  }
+]
