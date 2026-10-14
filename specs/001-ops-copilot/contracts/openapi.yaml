@@ -1,0 +1,375 @@
+openapi: 3.1.0
+info:
+  title: Ops Copilot API
+  version: 0.1.0
+  description: Authenticated multi-tenant API for the internal support/ops copilot.
+servers:
+  - url: http://localhost:8000
+    description: Local API
+security:
+  - bearerAuth: []
+paths:
+  /v1/auth/login:
+    post:
+      security: []
+      summary: Login and receive JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+  /v1/auth/me:
+    get:
+      summary: Current user and tenant
+      operationId: me
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+  /v1/threads:
+    get:
+      summary: List threads for current tenant/user
+      operationId: listThreads
+      responses:
+        '200':
+          description: Thread list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThreadSummary'
+    post:
+      summary: Create thread
+      operationId: createThread
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThreadRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadSummary'
+  /v1/threads/{thread_id}:
+    get:
+      summary: Get thread with messages (includes persisted steps)
+      operationId: getThread
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+      responses:
+        '200':
+          description: Thread detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadDetail'
+        '404':
+          description: Not found or wrong tenant
+  /v1/threads/{thread_id}/chat:
+    post:
+      summary: Send user message; stream timeline + tokens (SSE)
+      operationId: chatStream
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: SSE stream (see contracts/sse-events.md)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '404':
+          description: Thread not found
+        '409':
+          description: Thread already pending approval
+  /v1/threads/{thread_id}/approvals/{approval_id}:
+    post:
+      summary: Approve or reject a pending write
+      operationId: resolveApproval
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - name: approval_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecision'
+      responses:
+        '200':
+          description: Decision applied; may return SSE resume or JSON status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalResult'
+            text/event-stream:
+              schema:
+                type: string
+        '404':
+          description: Approval not found
+        '409':
+          description: Not pending
+  /v1/evals/run:
+    post:
+      summary: Run golden eval suite (builder/operator)
+      operationId: runEvals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                suite:
+                  type: string
+                  default: golden
+      responses:
+        '200':
+          description: Eval report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalReport'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ThreadId:
+      name: thread_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      required: [access_token, token_type, user]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [bearer]
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    UserProfile:
+      type: object
+      required: [id, email, display_name, tenant_id, tenant_name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        display_name:
+          type: string
+        tenant_id:
+          type: string
+          format: uuid
+        tenant_name:
+          type: string
+    CreateThreadRequest:
+      type: object
+      properties:
+        title:
+          type: string
+    ThreadSummary:
+      type: object
+      required: [id, title, status, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+          enum: [active, pending_approval, archived]
+        updated_at:
+          type: string
+          format: date-time
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+    SourceRef:
+      type: object
+      required: [id, title, uri]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        uri:
+          type: string
+    ProgressStep:
+      type: object
+      required: [id, type, label, status]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [searching, grading, rewriting, reading, tool, approval, writing, refused, error]
+        label:
+          type: string
+        status:
+          type: string
+          enum: [running, completed, failed]
+        detail:
+          type: object
+          properties:
+            query:
+              type: string
+            sources:
+              type: array
+              items:
+                $ref: '#/components/schemas/SourceRef'
+            tool_name:
+              type: string
+            error:
+              type: string
+    Message:
+      type: object
+      required: [id, role, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgressStep'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceRef'
+        created_at:
+          type: string
+          format: date-time
+    ThreadDetail:
+      allOf:
+        - $ref: '#/components/schemas/ThreadSummary'
+        - type: object
+          required: [messages]
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            pending_approval:
+              $ref: '#/components/schemas/PendingApproval'
+    PendingApproval:
+      type: object
+      required: [id, tool_name, payload, rationale, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tool_name:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        rationale:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+    ApprovalDecision:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject]
+    ApprovalResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, pending_approval]
+        applied:
+          type: boolean
+    EvalReport:
+      type: object
+      required: [passed, total, results]
+      properties:
+        passed:
+          type: integer
+        total:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            required: [case_id, pass]
+            properties:
+              case_id:
+                type: string
+              pass:
+                type: boolean
+              score:
+                type: number
+              notes:
+                type: string
+              trace_url:
+                type: string

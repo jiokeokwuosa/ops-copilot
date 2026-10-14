@@ -1,0 +1,8 @@
+{
+  "name": "ops-copilot",
+  "private": true,
+  "scripts": {
+    "start": "docker compose -f infra/docker-compose.yml up --build",
+    "stop": "docker compose -f infra/docker-compose.yml down"
+  }
+}
